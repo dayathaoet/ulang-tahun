@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Selamat Ulang Tahun 🎉</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #2b1b3f, #120a1f);
+      color: #fff;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      text-align: center;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    #overlay h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #ffd6ec;
+      text-shadow: 0 0 12px rgba(255, 105, 180, 0.7);
+    }
+
+    #overlay p {
+      margin: 6px 0 0;
+      font-size: 0.95rem;
+      color: #ffeef8;
+    }
+
+    #musicBtn {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      z-index: 13;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+
+    #musicBtn:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    #paperTrigger {
+      position: absolute;
+      left: 50%;
+      top: 85%;
+      transform: translate(-50%, -50%) rotate(-4deg);
+      z-index: 12;
+      width: 120px;
+      height: 78px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #fff9e6, #f8efcf);
+      border: 1px solid rgba(120, 90, 40, 0.35);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6a4a1f;
+      font-weight: bold;
+      font-size: 0.95rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+    }
+
+    #paperTrigger:hover {
+      transform: translate(-50%, -50%) rotate(-1deg) scale(1.03);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.34);
+    }
+
+    #letterModal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(10, 6, 20, 0.62);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #letterModal.show {
+      display: flex;
+    }
+
+    .letter-card {
+      width: min(520px, 92vw);
+      background: linear-gradient(180deg, #fffef8, #fff7df);
+      color: #533a16;
+      border-radius: 14px;
+      border: 1px solid rgba(120, 90, 40, 0.25);
+      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
+      padding: 20px 18px 16px;
+      position: relative;
+      animation: letterPop 0.25s ease;
+    }
+
+    .letter-card h2 {
+      margin: 0 0 10px;
+      color: #9b2d71;
+      font-size: 1.4rem;
+    }
+
+    .letter-card p {
+      margin: 0;
+      line-height: 1.6;
+      color: #5f4620;
+      white-space: pre-line;
+    }
+
+    #closeLetterBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      background: #f2d6a1;
+      color: #6d4d24;
+      font-weight: bold;
+    }
+
+    @keyframes letterPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <h1>Selamat Ulang Tahun! 🎂🌸</h1>
+    <p>Kue bisa di putar 360 derajat</p>
+    <p style="font-size:0.85rem; opacity:0.9; margin-top:4px;">Tekan <b>B</b> atau klik layar untuk meniup lilin 💨</p>
+  </div>
+
+  <audio id="bgMusic" src="music/music.mp3" loop></audio>
+
+  <button id="musicBtn" title="Kontrol Musik">🔊</button>
+
+  <div id="paperTrigger" title="Klik untuk buka surat">📜 Surat</div>
+
+  <div id="letterModal">
+    <div class="letter-card">
+      <button id="closeLetterBtn" aria-label="Tutup">✕</button>
+      <h2>Selamat Ulang Tahun 🎉</h2>
+      <p>
+Semoga panjang umur, sehat selalu, dan semua harapan baikmu satu per satu terwujud.
+Terima kasih sudah menjadi orang yang luar biasa.
+Hari ini spesial, dan kamu juga spesial 💖
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js?module';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js?module';
+    import { FontLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/FontLoader.js?module';
+    import { TextGeometry } from 'https://unpkg.com/three@0.160.0/examples/jsm/geometries/TextGeometry.js?module';
+
+    const scene = new THREE.Scene();
+
+    const bgMusic = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
+    let isMusicPlaying = false;
+
+    async function playMusic() {
+      try {
+        await bgMusic.play();
+        isMusicPlaying = true;
+        musicBtn.textContent = '🔊';
+      } catch (err) {
+        isMusicPlaying = false;
+        musicBtn.textContent = '🔇';
+      }
+    }
+
+    bgMusic.volume = 0.7;
+    playMusic();
+
+    musicBtn.addEventListener('click', async () => {
+      try {
+        if (!isMusicPlaying) {
+          await bgMusic.play();
+          isMusicPlaying = true;
+          musicBtn.textContent = '🔊';
+        } else {
+          bgMusic.pause();
+          isMusicPlaying = false;
+          musicBtn.textContent = '🔇';
+        }
+      } catch (err) {
+        musicBtn.textContent = '⚠️';
+      }
+    });
+
+    document.addEventListener('pointerdown', () => {
+      if (!isMusicPlaying) playMusic();
+    }, { once: true });
+
+    const paperTrigger = document.getElementById('paperTrigger');
+    const letterModal = document.getElementById('letterModal');
+    const closeLetterBtn = document.getElementById('closeLetterBtn');
+
+    paperTrigger.addEventListener('click', () => {
+      letterModal.classList.add('show');
+    });
+
+    closeLetterBtn.addEventListener('click', () => {
+      letterModal.classList.remove('show');
+    });
+
+    letterModal.addEventListener('click', (e) => {
+      if (e.target === letterModal) {
+        letterModal.classList.remove('show');
+      }
+    });
+
+    scene.fog = new THREE.Fog(0x120a1f, 10, 40);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 5, 12);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 2, 0);
+
+    const ambientLight = new THREE.AmbientLight(0xffd8f0, 0.6);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    dirLight.position.set(6, 10, 4);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    const pointLight = new THREE.PointLight(0xff9bd4, 1.2, 25);
+    pointLight.position.set(0, 5, 0);
+    scene.add(pointLight);
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(12, 64),
+      new THREE.MeshStandardMaterial({ color: 0x3a244f, roughness: 0.8, metalness: 0.1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const cakeGroup = new THREE.Group();
+    const clock = new THREE.Clock();
+    const introDuration = 2.2;
+
+    function createCakeLayer(radius, height, color, y) {
+      const layer = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius + 0.1, height, 48),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05 })
+      );
+      layer.position.y = y;
+      layer.castShadow = true;
+      layer.receiveShadow = true;
+      return layer;
+    }
+
+    const layer1 = createCakeLayer(2.6, 1.2, 0xf7c5d8, 0.6);
+    const layer2 = createCakeLayer(1.9, 1.0, 0xffe0eb, 1.7);
+    const layer3 = createCakeLayer(1.2, 0.8, 0xfff2f7, 2.6);
+    cakeGroup.add(layer1, layer2, layer3);
+
+    const icing = new THREE.Mesh(
+      new THREE.TorusGeometry(2.55, 0.12, 16, 100),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+    );
+    icing.rotation.x = Math.PI / 2;
+    icing.position.y = 1.21;
+    cakeGroup.add(icing);
+
+    const numberCandleGroup = new THREE.Group();
+    numberCandleGroup.position.y = 3.0;
+    let textMesh30 = null;
+
+    const loader = new FontLoader();
+    loader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
+      const textGeo = new TextGeometry('30', {
+        font,
+        size: 0.55,
+        height: 0.18,
+        curveSegments: 12,
+        bevelEnabled: true,
+        bevelThickness: 0.03,
+        bevelSize: 0.015,
+        bevelSegments: 3
+      });
+      textGeo.computeBoundingBox();
+      const textWidth = textGeo.boundingBox.max.x - textGeo.boundingBox.min.x;
+
+      textMesh30 = new THREE.Mesh(
+        textGeo,
+        new THREE.MeshStandardMaterial({ color: 0xff8dc2, metalness: 0.25, roughness: 0.35 })
+      );
+      textMesh30.position.x = -textWidth / 2;
+      textMesh30.castShadow = true;
+      textMesh30.receiveShadow = true;
+      numberCandleGroup.add(textMesh30);
+    });
+
+    const wick = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.16, 10),
+      new THREE.MeshStandardMaterial({ color: 0x2c2c2c })
+    );
+    wick.position.set(0, 0.45, 0.05);
+    numberCandleGroup.add(wick);
+
+    const flame = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffc94d })
+    );
+    flame.position.set(0, 0.58, 0.05);
+    numberCandleGroup.add(flame);
+
+    const smokeParticles = [];
+    for (let i = 0; i < 8; i++) {
+      const smoke = new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0xbbbbbb, transparent: true, opacity: 0 })
+      );
+      smoke.position.set(0, 0.58, 0.05);
+      smoke.visible = false;
+      smokeParticles.push(smoke);
+      numberCandleGroup.add(smoke);
+    }
+
+    let candleBlown = false;
+    function blowCandle() {
+      if (candleBlown) return;
+      candleBlown = true;
+      flame.visible = false;
+      smokeParticles.forEach((s, i) => {
+        s.visible = true;
+        s.material.opacity = 0.55;
+        s.userData = {
+          vx: (Math.random() - 0.5) * 0.02,
+          vy: 0.015 + Math.random() * 0.015,
+          vz: (Math.random() - 0.5) * 0.02,
+          life: 1 - i * 0.07
+        };
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'b') blowCandle();
+    });
+
+    cakeGroup.add(numberCandleGroup);
+
+    cakeGroup.position.y = -3;
+    cakeGroup.scale.set(0.01, 0.01, 0.01);
+
+    scene.add(cakeGroup);
+
+    const flowers = new THREE.Group();
+
+    function createFlower(x, z, petalColor = 0xff7eb6) {
+      const flower = new THREE.Group();
+
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 1.3, 10),
+        new THREE.MeshStandardMaterial({ color: 0x4f9c5a, roughness: 0.8 })
+      );
+      stem.position.y = 0.65;
+      flower.add(stem);
+
+      const center = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0xffd447, roughness: 0.6 })
+      );
+      center.position.y = 1.35;
+      flower.add(center);
+
+      for (let i = 0; i < 6; i++) {
+        const petal = new THREE.Mesh(
+          new THREE.SphereGeometry(0.16, 16, 16),
+          new THREE.MeshStandardMaterial({ color: petalColor, roughness: 0.5 })
+        );
+        const a = (i / 6) * Math.PI * 2;
+        petal.position.set(Math.cos(a) * 0.25, 1.35, Math.sin(a) * 0.25);
+        flower.add(petal);
+      }
+
+      flower.position.set(x, 0, z);
+      flower.castShadow = true;
+      flower.receiveShadow = true;
+      return flower;
+    }
+
+    const flowerPositions = [
+      [-4, 0], [-3.2, 1.5], [-3.4, -1.8],
+      [4, 0.3], [3.1, -1.4], [3.5, 1.8],
+      [0, -4], [1.6, -3.4], [-1.8, -3.3]
+    ];
+
+    flowerPositions.forEach((p, i) => {
+      const colors = [0xff7eb6, 0xff9ac2, 0xff6fa8, 0xffb3d9];
+      const flower = createFlower(p[0], p[1], colors[i % colors.length]);
+      flower.userData.delay = 0.45 + i * 0.12;
+      flower.scale.set(0.01, 0.01, 0.01);
+      flower.position.y = -1.2;
+      flowers.add(flower);
+    });
+
+    scene.add(flowers);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    function onPointerDown(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const clickable = [flame];
+      if (textMesh30) clickable.push(textMesh30);
+      const hits = raycaster.intersectObjects(clickable, false);
+      if (hits.length > 0) {
+        blowCandle();
+      }
+    }
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+    const stars = new THREE.Points(
+      new THREE.BufferGeometry(),
+      new THREE.PointsMaterial({ color: 0xffffff, size: 0.05 })
+    );
+    const starVertices = [];
+    for (let i = 0; i < 500; i++) {
+      starVertices.push((Math.random() - 0.5) * 80);
+      starVertices.push(Math.random() * 35 + 5);
+      starVertices.push((Math.random() - 0.5) * 80);
+    }
+    stars.geometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    scene.add(stars);
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const t = performance.now() * 0.001;
+      const elapsed = clock.getElapsedTime();
+      const introProgress = Math.min(elapsed / introDuration, 1);
+      const eased = 1 - Math.pow(1 - introProgress, 3);
+
+      cakeGroup.position.y = -3 + 3 * eased;
+      const cakeScale = Math.max(0.01, eased);
+      cakeGroup.scale.set(cakeScale, cakeScale, cakeScale);
+      cakeGroup.rotation.y = t * 0.35;
+      if (!candleBlown) {
+        flame.scale.y = 1 + Math.sin(t * 6) * 0.15;
+        pointLight.intensity = 1 + Math.sin(t * 8) * 0.1;
+      } else {
+        pointLight.intensity = 0.75 + Math.sin(t * 5) * 0.04;
+      }
+
+      smokeParticles.forEach((s) => {
+        if (!s.visible) return;
+        s.position.x += s.userData.vx;
+        s.position.y += s.userData.vy;
+        s.position.z += s.userData.vz;
+        s.material.opacity *= 0.965;
+        if (s.material.opacity < 0.03) {
+          s.visible = false;
+        }
+      });
+
+      numberCandleGroup.rotation.y = Math.sin(t * 0.7) * 0.06;
+
+      flowers.children.forEach((flower, i) => {
+        const delay = flower.userData.delay || 0;
+        const local = Math.max(0, Math.min(1, (elapsed - delay) / 0.7));
+        const fEased = 1 - Math.pow(1 - local, 3);
+        const fScale = Math.max(0.01, fEased);
+        flower.scale.set(fScale, fScale, fScale);
+        flower.position.y = -1.2 + 1.2 * fEased;
+        flower.rotation.z = Math.sin(t * 1.6 + i) * 0.05;
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
